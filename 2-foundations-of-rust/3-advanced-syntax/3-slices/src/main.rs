@@ -9,25 +9,26 @@
 /// Merge two array slices (that have to be sorted) into a vector
 fn merge(a: &[i32], b: &[i32]) -> Vec<i32> {
     let mut dest = Vec::new();
-
-    let a_idx = 0;
-    let b_idx = 0;
+    let mut a_idx = 0;
+    let mut b_idx = 0;
 
     while a_idx < a.len() && b_idx < b.len() {
         if a[a_idx] <= b[b_idx] {
             dest.push(a[a_idx]);
-            a_idx += 1
+            a_idx += 1;
         } else {
             dest.push(b[b_idx]);
-            b_idx += 1
+            b_idx += 1;
         }
     }
 
-    for elem in a[a_idx..] {
-        dest.push(elem)
+    // Add any remaining elements from `a`
+    for elem in &a[a_idx..] {
+        dest.push(*elem);
     }
-    for elem in b[b_idx..] {
-        dest.push(elem)
+    // Add any remaining elements from `b`
+    for elem in &b[b_idx..] {
+        dest.push(*elem);
     }
 
     dest
@@ -35,12 +36,15 @@ fn merge(a: &[i32], b: &[i32]) -> Vec<i32> {
 
 /// Take an array slice, and sort into a freshly constructed vector using the above function
 fn merge_sort(data: &[i32]) -> Vec<i32> {
-    if data.len() > 1 {
-        // implement this
-        todo!()
-    } else {
-        data.to_vec()
+    if data.len() <= 1 {
+        return data.to_vec();
     }
+
+    let mid = data.len() / 2;
+    let left = merge_sort(&data[..mid]);
+    let right = merge_sort(&data[mid..]);
+
+    merge(&left, &right)
 }
 
 /// Read a bunch of numbers from standard input into a Vec<i32>.
