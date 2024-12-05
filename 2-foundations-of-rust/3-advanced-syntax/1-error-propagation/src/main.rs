@@ -19,32 +19,49 @@ use std::io::{self, BufRead, BufReader, Lines};
 
 //change this into:
 //fn read_lines(filename: &str) -> Result<Lines<BufReader<File>>, io::Error> {
-fn read_lines(filename: &str) -> Lines<BufReader<File>> {
-    let file = File::open(filename).unwrap(); // this can easily fail
-    BufReader::new(file).lines()
+fn read_lines(filename: &str) -> Result<Lines<BufReader<File>>, io::Error> {
+    let file = File::open(filename)?; // am pus ? in caz ca deschiderea nu merge
+    Ok(BufReader::new(file).lines())
 }
+    
 
 //change this into:
 //fn count_bytes_and_lines(filename: &str) -> Result<(usize, usize, usize), io::Error> {
-fn count_bytes_and_lines(filename: &str) -> (usize, usize, usize) {
-    let lines = read_lines(filename);
+fn count_bytes_and_lines(filename: &str) -> Result<(usize, usize, usize), io::Error> {
+    let lines = read_lines(filename)?; // ? in caz de eroare
     let mut line_count = 0;
     let mut word_count = 0;
     let mut byte_count = 0;
+    
     for line in lines {
-        let text = line.unwrap(); // this will usually not fail
+        let text = line?; //? in caz ca o linie nu poate fi citita // ? propaga eroarea 
         line_count += 1;
         word_count += text.split_whitespace().count();
         byte_count += text.len();
     }
-
-    (line_count, word_count, byte_count)
+    
+    Ok((line_count, word_count, byte_count))
 }
+    
+    
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        eprintln!("Usage: {} <filename>", args[0]);
+        std::process::exit(1);
+    }
+
     let filename = &args[1];
 
-    let (lines, words, bytes) = count_bytes_and_lines(filename);
-    println!("{filename}: {lines} lines, {words} words, {bytes} bytes");
+    // Handle errors from count_bytes_and_lines
+    match count_bytes_and_lines(filename) {
+        Ok((lines, words, bytes)) => {
+            println!("{filename}: {lines} lines, {words} words, {bytes} bytes");
+        }
+        Err(e) => {
+            eprintln!("Error reading file {}: {}", filename, e);
+            std::process::exit(1);
+        }
+    }
 }

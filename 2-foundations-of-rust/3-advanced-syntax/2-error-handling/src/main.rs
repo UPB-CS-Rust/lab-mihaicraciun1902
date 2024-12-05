@@ -27,28 +27,42 @@ use std::io::{BufRead, self, Write};
 enum MyError{ InvalidName,IOError( io::Error),
 }
 
-fn get_username( )
-->  String
-{
+
+fn get_username() -> Result<String, MyError> {
     print!("Username: ");
-    io::stdout().flush();
+    io::stdout().flush().map_err(MyError::IOError)?;
 
-    let mut input=String::new();
-    io::stdin().lock().read_line(&mut input); input=input.trim().to_string();
+    let mut input = String::new();
+    io::stdin()
+        .lock()
+        .read_line(&mut input)
+        .map_err(MyError::IOError)?;
 
-    for c in input.chars()
-    {
-	if !char::is_alphabetic(c) { panic!("that's not a valid name, try again"); }
+    input = input.trim().to_string();
+
+    // verificam daca inputul contine doar valori din alfabet
+    if input.is_empty() || !input.chars().all(char::is_alphabetic) {
+        return Err(MyError::InvalidName);
     }
 
-if input.is_empty() {
-panic!("that's not a valid name, try again");
-}
-
-    input
+    Ok(input)
 }
 
 fn main() {
-    let name=get_username();
-    println!("Hello {name}!")
+    loop {
+        match get_username() {
+            Ok(name) => {
+                println!("Hello, {name}!");
+                break;
+            }
+            Err(MyError::InvalidName) => {
+                eprintln!("Invalid name, please use only alphabetic characters.");
+                // mesaj de reincercare in caz ca se da ca input un alt fel de caract care nu e alfabetic
+            }
+            Err(MyError::IOError(e)) => {
+                eprintln!("An I/O error occurred: {}", e);
+                std::process::exit(1); // se iese din program in caz ca avem o problema de io
+            }
+        }
+    }
 }
